@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-display: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
+    --font-sans: 'DM Sans', 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif;
+    --font-arabic-display: 'IBM Plex Sans Arabic', 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-arabic-sans: 'IBM Plex Sans Arabic', 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    --bg-canvas: #F7FAFC;
+    --bg-surface: #FFFFFF;
+    --bg-subtle: #EEF4F9;
+    --border-hairline: #E3EAF2;
+    --accent-primary: #69B6FF;
+    --shadow-soft: 0 2px 12px -2px rgba(11, 15, 21, 0.045), 0 1px 3px rgba(11, 15, 21, 0.025);
+  }
+
+  .dark {
+    --bg-canvas: #0B0F15;
+    --bg-surface: #121822;
+    --bg-subtle: #18202D;
+    --border-hairline: rgba(255, 255, 255, 0.08);
+    --accent-primary: #69B6FF;
+    --shadow-soft: 0 4px 20px -4px rgba(0, 0, 0, 0.45);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html[dir='rtl'] {
+    font-family: var(--font-arabic-sans);
+  }
+
+  .dark html[dir='ltr'] body {
+    letter-spacing: 0.005em;
+  }
+
+  html[dir='rtl'] body {
+    letter-spacing: 0;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  html[dir='rtl'] h1,
+  html[dir='rtl'] h2,
+  html[dir='rtl'] h3,
+  html[dir='rtl'] h4,
+  html[dir='rtl'] .font-display {
+    font-family: var(--font-arabic-display);
+  }
+
+  .font-mono-tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.sabeel-card {
+  background-color: var(--bg-surface);
+  border-radius: 18px;
+  border: 1px solid var(--border-hairline);
+  box-shadow: var(--shadow-soft);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+}

@@ -1,0 +1,519 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------------------------------
+    // Global Primitives
+    // ---------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function classExistsAndOwned(classId) {
+      return exists(/databases/$(database)/documents/classes/$(classId)) &&
+             get(/databases/$(database)/documents/classes/$(classId)).data.ownerId == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------
+    // Entity Validation Helpers
+    // ---------------------------------------------------------
+    function isValidUserWorkspace(data) {
+      return data.keys().hasAll([
+          'ownerId', 'name', 'role', 'department', 'cohort',
+          'timezone', 'bio', 'avatarUrl', 'initials',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'name', 'role', 'department', 'cohort',
+          'timezone', 'bio', 'avatarUrl', 'initials',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.role in ['Student', 'Teaching Fellow', 'Instructor'] &&
+        data.department is string && data.department.size() <= 140 &&
+        data.cohort is string && data.cohort.size() <= 60 &&
+        data.timezone is string && data.timezone.size() >= 1 && data.timezone.size() <= 80 &&
+        data.bio is string && data.bio.size() <= 600 &&
+        data.avatarUrl is string && data.avatarUrl.size() <= 500 &&
+        data.initials is string && data.initials.size() >= 1 && data.initials.size() <= 4 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data) {
+      return data.keys().hasAll(['ownerId', 'email', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'email', 'createdAt', 'updatedAt']) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserSettings(data) {
+      return data.keys().hasAll([
+          'ownerId', 'language', 'theme',
+          'microphoneId', 'cameraId', 'speakerId',
+          'autoMuteOnJoin', 'cameraOffOnJoin',
+          'sessionReminders', 'chatMentions',
+          'materialUploads', 'weeklyDigest', 'compactSchedule',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'language', 'theme',
+          'microphoneId', 'cameraId', 'speakerId',
+          'autoMuteOnJoin', 'cameraOffOnJoin',
+          'sessionReminders', 'chatMentions',
+          'materialUploads', 'weeklyDigest', 'compactSchedule',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.language in ['ar', 'en'] &&
+        data.theme in ['light', 'dark'] &&
+        data.microphoneId is string && data.microphoneId.size() <= 160 &&
+        data.cameraId is string && data.cameraId.size() <= 160 &&
+        data.speakerId is string && data.speakerId.size() <= 160 &&
+        data.autoMuteOnJoin is bool &&
+        data.cameraOffOnJoin is bool &&
+        data.sessionReminders is bool &&
+        data.chatMentions is bool &&
+        data.materialUploads is bool &&
+        data.weeklyDigest is bool &&
+        data.compactSchedule is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidClass(data) {
+      return data.keys().hasAll([
+          'ownerId', 'code', 'title', 'discipline', 'teacherId',
+          'instructorName', 'instructorTitle', 'instructorAvatar',
+          'scheduleSummary', 'roomCode', 'totalSessions',
+          'completedSessions', 'enrolledCount', 'description',
+          'syllabusTopics', 'isLiveNow', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'code', 'title', 'discipline', 'teacherId',
+          'instructorName', 'instructorTitle', 'instructorAvatar',
+          'scheduleSummary', 'roomCode', 'totalSessions',
+          'completedSessions', 'enrolledCount', 'description',
+          'syllabusTopics', 'isLiveNow', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.code is string && data.code.size() >= 1 && data.code.size() <= 24 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 140 &&
+        data.discipline in ['Computer Science', 'Mathematics', 'Humanities', 'Economics', 'Sciences', 'Languages'] &&
+        data.teacherId is string && data.teacherId.size() <= 128 &&
+        data.instructorName is string && data.instructorName.size() >= 1 && data.instructorName.size() <= 100 &&
+        data.instructorTitle is string && data.instructorTitle.size() <= 120 &&
+        data.instructorAvatar is string && data.instructorAvatar.size() <= 500 &&
+        data.scheduleSummary is string && data.scheduleSummary.size() <= 120 &&
+        data.roomCode is string && data.roomCode.size() >= 1 && data.roomCode.size() <= 24 &&
+        data.totalSessions is int && data.totalSessions >= 1 && data.totalSessions <= 200 &&
+        data.completedSessions is int && data.completedSessions >= 0 && data.completedSessions <= data.totalSessions &&
+        data.enrolledCount is int && data.enrolledCount >= 0 && data.enrolledCount <= 1000 &&
+        data.description is string && data.description.size() <= 600 &&
+        data.syllabusTopics is list && data.syllabusTopics.size() <= 10 &&
+        (data.syllabusTopics.size() == 0 || data.syllabusTopics[0] is string) &&
+        data.isLiveNow is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidMeeting(data) {
+      return data.keys().hasAll([
+          'ownerId', 'classId', 'courseCode', 'title',
+          'instructorName', 'instructorAvatar', 'scheduledDate',
+          'startTime', 'endTime', 'durationMinutes', 'roomCode',
+          'status', 'sessionType', 'reminderEnabled',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'classId', 'courseCode', 'title',
+          'instructorName', 'instructorAvatar', 'scheduledDate',
+          'startTime', 'endTime', 'durationMinutes', 'roomCode',
+          'status', 'sessionType', 'reminderEnabled',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.classId) &&
+        data.courseCode is string && data.courseCode.size() >= 1 && data.courseCode.size() <= 24 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.instructorName is string && data.instructorName.size() >= 1 && data.instructorName.size() <= 100 &&
+        data.instructorAvatar is string && data.instructorAvatar.size() <= 500 &&
+        data.scheduledDate is string && data.scheduledDate.size() >= 8 && data.scheduledDate.size() <= 24 &&
+        data.startTime is string && data.startTime.size() >= 3 && data.startTime.size() <= 12 &&
+        data.endTime is string && data.endTime.size() >= 3 && data.endTime.size() <= 12 &&
+        data.durationMinutes is int && data.durationMinutes >= 5 && data.durationMinutes <= 480 &&
+        data.roomCode is string && data.roomCode.size() >= 1 && data.roomCode.size() <= 24 &&
+        data.status in ['live', 'upcoming', 'completed'] &&
+        data.sessionType in ['Live Lecture', 'Seminar Discussion', 'Lab Workshop'] &&
+        data.reminderEnabled is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidTeacher(data) {
+      return data.keys().hasAll(['ownerId', 'name', 'title', 'department', 'avatarUrl', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerId', 'name', 'title', 'department', 'avatarUrl', 'createdAt', 'updatedAt']) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.title is string && data.title.size() <= 120 &&
+        data.department is string && data.department.size() <= 120 &&
+        data.avatarUrl is string && data.avatarUrl.size() <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStudent(data) {
+      return data.keys().hasAll([
+          'ownerId', 'classId', 'name', 'studentCode', 'cohort',
+          'avatarUrl', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'classId', 'name', 'studentCode', 'cohort',
+          'avatarUrl', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.classId) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.studentCode is string && data.studentCode.size() >= 1 && data.studentCode.size() <= 40 &&
+        data.cohort is string && data.cohort.size() <= 60 &&
+        data.avatarUrl is string && data.avatarUrl.size() <= 500 &&
+        data.status in ['active', 'excused'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'courseCode', 'detail',
+          'category', 'read', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'title', 'courseCode', 'detail',
+          'category', 'read', 'createdAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.courseCode is string && data.courseCode.size() >= 1 && data.courseCode.size() <= 24 &&
+        data.detail is string && data.detail.size() <= 300 &&
+        data.category in ['session', 'material', 'note', 'schedule'] &&
+        data.read is bool &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidMeetingNote(data) {
+      return data.keys().hasAll([
+          'ownerId', 'classId', 'content', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'classId', 'content', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.classId) &&
+        data.content is string && data.content.size() <= 20000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidRoomMessage(data) {
+      return data.keys().hasAll([
+          'ownerId', 'classId', 'senderId', 'senderName',
+          'senderRole', 'text', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'classId', 'senderId', 'senderName',
+          'senderRole', 'text', 'createdAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.classId) &&
+        data.senderId is string && data.senderId.size() >= 1 && data.senderId.size() <= 128 &&
+        data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 100 &&
+        data.senderRole in ['Instructor', 'Student', 'Teaching Fellow'] &&
+        data.text is string && data.text.size() >= 1 && data.text.size() <= 1000 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidClassFile(data) {
+      return data.keys().hasAll([
+          'ownerId', 'classId', 'name', 'size', 'type',
+          'url', 'uploadedBy', 'summary', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'classId', 'name', 'size', 'type',
+          'url', 'uploadedBy', 'summary', 'createdAt'
+        ]) &&
+        isValidId(data.ownerId) &&
+        data.ownerId == request.auth.uid &&
+        isValidId(data.classId) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 160 &&
+        data.size is string && data.size.size() >= 1 && data.size.size() <= 32 &&
+        data.type in ['PDF', 'Slides', 'Dataset', 'Worksheet', 'Link'] &&
+        data.url is string && data.url.size() <= 500 &&
+        data.uploadedBy is string && data.uploadedBy.size() >= 1 && data.uploadedBy.size() <= 100 &&
+        data.summary is string && data.summary.size() <= 400 &&
+        data.createdAt is timestamp;
+    }
+
+    // ---------------------------------------------------------
+    // Collection Match Blocks
+    // ---------------------------------------------------------
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserWorkspace(incoming()) &&
+        incoming().role == 'Student' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserWorkspace(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().role == existing().role &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department', 'cohort', 'timezone', 'bio', 'initials', 'updatedAt']);
+      allow delete: if false;
+
+      match /private/info {
+        allow get: if isOwner(userId) && isValidId(userId);
+        allow list: if false;
+        allow create: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time;
+        allow update: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(userId) &&
+          isValidUserPrivateInfo(incoming()) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+        allow delete: if false;
+      }
+
+      match /notes/{classId} {
+        allow get: if isOwner(userId) && isValidId(classId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(classId) &&
+          isValidMeetingNote(incoming()) &&
+          incoming().classId == classId &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          classExistsAndOwned(classId);
+        allow update: if isVerifiedUser() &&
+          isOwner(userId) &&
+          isValidId(classId) &&
+          isValidMeetingNote(incoming()) &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().classId == existing().classId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['content', 'updatedAt']);
+        allow delete: if false;
+      }
+    }
+
+    match /settings/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserSettings(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isOwner(userId) &&
+        isValidId(userId) &&
+        isValidUserSettings(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'language', 'theme', 'microphoneId', 'cameraId', 'speakerId',
+          'autoMuteOnJoin', 'cameraOffOnJoin', 'sessionReminders',
+          'chatMentions', 'materialUploads', 'weeklyDigest',
+          'compactSchedule', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /classes/{classId} {
+      allow get: if isSignedIn() && isValidId(classId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(classId) &&
+        isValidClass(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(classId) &&
+        existing().ownerId == request.auth.uid &&
+        isValidClass(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'discipline', 'scheduleSummary', 'totalSessions',
+          'completedSessions', 'enrolledCount', 'description',
+          'syllabusTopics', 'isLiveNow', 'updatedAt'
+        ]);
+      allow delete: if isVerifiedUser() && isValidId(classId) && existing().ownerId == request.auth.uid;
+
+      match /messages/{messageId} {
+        allow get: if isSignedIn() && isValidId(messageId) && classExistsAndOwned(classId);
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() &&
+          isValidId(classId) &&
+          isValidId(messageId) &&
+          isValidRoomMessage(incoming()) &&
+          incoming().classId == classId &&
+          incoming().createdAt == request.time &&
+          classExistsAndOwned(classId);
+        allow update, delete: if false;
+      }
+
+      match /files/{fileId} {
+        allow get: if isSignedIn() && isValidId(fileId) && classExistsAndOwned(classId);
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() &&
+          isValidId(classId) &&
+          isValidId(fileId) &&
+          isValidClassFile(incoming()) &&
+          incoming().classId == classId &&
+          incoming().createdAt == request.time &&
+          classExistsAndOwned(classId);
+        allow update: if false;
+        allow delete: if isVerifiedUser() && isValidId(fileId) && classExistsAndOwned(classId);
+      }
+    }
+
+    match /meetings/{meetingId} {
+      allow get: if isSignedIn() && isValidId(meetingId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(meetingId) &&
+        isValidMeeting(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        classExistsAndOwned(incoming().classId);
+      allow update: if isVerifiedUser() &&
+        isValidId(meetingId) &&
+        existing().ownerId == request.auth.uid &&
+        existing().status != 'completed' &&
+        isValidMeeting(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().classId == existing().classId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['reminderEnabled', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        );
+      allow delete: if isVerifiedUser() && isValidId(meetingId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /teachers/{teacherId} {
+      allow get: if isSignedIn() && isValidId(teacherId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(teacherId) &&
+        isValidTeacher(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(teacherId) &&
+        existing().ownerId == request.auth.uid &&
+        isValidTeacher(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'title', 'department', 'avatarUrl', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(teacherId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /students/{studentId} {
+      allow get: if isSignedIn() && isValidId(studentId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(studentId) &&
+        isValidStudent(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        classExistsAndOwned(incoming().classId);
+      allow update: if isVerifiedUser() &&
+        isValidId(studentId) &&
+        existing().ownerId == request.auth.uid &&
+        isValidStudent(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().classId == existing().classId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'cohort', 'status', 'updatedAt']);
+      allow delete: if isVerifiedUser() && isValidId(studentId) && existing().ownerId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && isValidId(notificationId) && existing().ownerId == request.auth.uid;
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(notificationId) &&
+        isValidNotification(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(notificationId) &&
+        existing().ownerId == request.auth.uid &&
+        isValidNotification(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isVerifiedUser() && isValidId(notificationId) && existing().ownerId == request.auth.uid;
+    }
+  }
+}
