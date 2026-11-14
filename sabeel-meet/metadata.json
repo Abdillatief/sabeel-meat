@@ -1,0 +1,8 @@
+{
+  "name": "Sabeel Meet",
+  "description": "A focused educational video classroom and academic workspace for live seminars, course scheduling, and collaborative study.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

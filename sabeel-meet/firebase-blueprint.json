@@ -1,0 +1,456 @@
+{
+  "entities": {
+    "UserWorkspace": {
+      "title": "UserWorkspace",
+      "description": "Authenticated user's non-PII academic profile stored in the users collection.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "role": {
+          "type": "string",
+          "enum": ["Student", "Teaching Fellow", "Instructor"]
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "cohort": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "avatarUrl": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "initials": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "role",
+        "department",
+        "cohort",
+        "timezone",
+        "bio",
+        "avatarUrl",
+        "initials",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII document storing the user's verified email address.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerId", "email", "createdAt", "updatedAt"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User workspace preferences including language, theme, audio/video devices, and notification flags.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["ar", "en"]
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["light", "dark"]
+        },
+        "microphoneId": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "cameraId": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "speakerId": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "autoMuteOnJoin": { "type": "boolean" },
+        "cameraOffOnJoin": { "type": "boolean" },
+        "sessionReminders": { "type": "boolean" },
+        "chatMentions": { "type": "boolean" },
+        "materialUploads": { "type": "boolean" },
+        "weeklyDigest": { "type": "boolean" },
+        "compactSchedule": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "language",
+        "theme",
+        "microphoneId",
+        "cameraId",
+        "speakerId",
+        "autoMuteOnJoin",
+        "cameraOffOnJoin",
+        "sessionReminders",
+        "chatMentions",
+        "materialUploads",
+        "weeklyDigest",
+        "compactSchedule",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ClassItem": {
+      "title": "ClassItem",
+      "description": "Real educational class stored in the classes collection.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "code": { "type": "string", "minLength": 1, "maxLength": 24 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "discipline": {
+          "type": "string",
+          "enum": ["Computer Science", "Mathematics", "Humanities", "Economics", "Sciences", "Languages"]
+        },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "instructorName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "instructorTitle": { "type": "string", "maxLength": 120 },
+        "instructorAvatar": { "type": "string", "maxLength": 500 },
+        "scheduleSummary": { "type": "string", "maxLength": 120 },
+        "roomCode": { "type": "string", "minLength": 1, "maxLength": 24 },
+        "totalSessions": { "type": "integer" },
+        "completedSessions": { "type": "integer" },
+        "enrolledCount": { "type": "integer" },
+        "description": { "type": "string", "maxLength": 600 },
+        "syllabusTopics": { "type": "array" },
+        "isLiveNow": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "code",
+        "title",
+        "discipline",
+        "teacherId",
+        "instructorName",
+        "instructorTitle",
+        "instructorAvatar",
+        "scheduleSummary",
+        "roomCode",
+        "totalSessions",
+        "completedSessions",
+        "enrolledCount",
+        "description",
+        "syllabusTopics",
+        "isLiveNow",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Meeting": {
+      "title": "Meeting",
+      "description": "Scheduled or live classroom meeting stored in the meetings collection.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "classId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "courseCode": { "type": "string", "minLength": 1, "maxLength": 24 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "instructorName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "instructorAvatar": { "type": "string", "maxLength": 500 },
+        "scheduledDate": { "type": "string", "minLength": 8, "maxLength": 24 },
+        "startTime": { "type": "string", "minLength": 3, "maxLength": 12 },
+        "endTime": { "type": "string", "minLength": 3, "maxLength": 12 },
+        "durationMinutes": { "type": "integer" },
+        "roomCode": { "type": "string", "minLength": 1, "maxLength": 24 },
+        "status": {
+          "type": "string",
+          "enum": ["live", "upcoming", "completed"]
+        },
+        "sessionType": {
+          "type": "string",
+          "enum": ["Live Lecture", "Seminar Discussion", "Lab Workshop"]
+        },
+        "reminderEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "classId",
+        "courseCode",
+        "title",
+        "instructorName",
+        "instructorAvatar",
+        "scheduledDate",
+        "startTime",
+        "endTime",
+        "durationMinutes",
+        "roomCode",
+        "status",
+        "sessionType",
+        "reminderEnabled",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Instructor profile stored in the teachers collection.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "title": { "type": "string", "maxLength": 120 },
+        "department": { "type": "string", "maxLength": 120 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "name", "title", "department", "avatarUrl", "createdAt", "updatedAt"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Enrolled student record stored in the students collection.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "classId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "studentCode": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "cohort": { "type": "string", "maxLength": 60 },
+        "avatarUrl": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["active", "excused"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "classId",
+        "name",
+        "studentCode",
+        "cohort",
+        "avatarUrl",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "Real workspace notification or activity log entry.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "courseCode": { "type": "string", "minLength": 1, "maxLength": 24 },
+        "detail": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "enum": ["session", "material", "note", "schedule"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "title", "courseCode", "detail", "category", "read", "createdAt"]
+    },
+    "MeetingNote": {
+      "title": "MeetingNote",
+      "description": "Personal lecture notes saved per class.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "classId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "content": { "type": "string", "maxLength": 20000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "classId", "content", "createdAt", "updatedAt"]
+    },
+    "RoomMessage": {
+      "title": "RoomMessage",
+      "description": "Classroom chat message persisted under a class.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "classId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "senderName": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "senderRole": { "type": "string", "enum": ["Instructor", "Student", "Teaching Fellow"] },
+        "text": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "classId", "senderId", "senderName", "senderRole", "text", "createdAt"]
+    },
+    "ClassFile": {
+      "title": "ClassFile",
+      "description": "Shared educational resource or file metadata attached to a class.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "classId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "size": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "type": { "type": "string", "enum": ["PDF", "Slides", "Dataset", "Worksheet", "Link"] },
+        "url": { "type": "string", "maxLength": 500 },
+        "uploadedBy": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "summary": { "type": "string", "maxLength": 400 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "classId", "name", "size", "type", "url", "uploadedBy", "summary", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserWorkspace" },
+      "description": "User profile document."
+    },
+    "/users/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII email document."
+    },
+    "/users/{userId}/notes/{classId}": {
+      "schema": { "$ref": "#/entities/MeetingNote" },
+      "description": "Personal lecture notes per class."
+    },
+    "/settings/{userId}": {
+      "schema": { "$ref": "#/entities/UserSettings" },
+      "description": "Workspace language, theme, device, and notification settings."
+    },
+    "/classes/{classId}": {
+      "schema": { "$ref": "#/entities/ClassItem" },
+      "description": "Educational classes collection."
+    },
+    "/classes/{classId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/RoomMessage" },
+      "description": "Live classroom chat messages."
+    },
+    "/classes/{classId}/files/{fileId}": {
+      "schema": { "$ref": "#/entities/ClassFile" },
+      "description": "Shared class materials and resource links."
+    },
+    "/meetings/{meetingId}": {
+      "schema": { "$ref": "#/entities/Meeting" },
+      "description": "Scheduled and live meetings collection."
+    },
+    "/teachers/{teacherId}": {
+      "schema": { "$ref": "#/entities/Teacher" },
+      "description": "Instructors directory collection."
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Students enrollment collection."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/NotificationItem" },
+      "description": "Real notifications and activity log collection."
+    }
+  }
+}
